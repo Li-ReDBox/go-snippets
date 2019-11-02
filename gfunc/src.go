@@ -1,7 +1,10 @@
 package src
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
-func Demo() {
-	fmt.Println("this is main demo")
+func Demo(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Hello, this is main demo")
 }

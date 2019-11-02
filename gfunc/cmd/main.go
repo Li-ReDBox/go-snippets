@@ -1,7 +1,15 @@
 package main
 
-import "gfunc/src"
+import (
+	"fmt"
+	"gfunc/src"
+	"net/http"
+)
 
 func main() {
-	src.Demo()
+	http.Handle("/", http.HandlerFunc(src.Demo))
+	err := http.ListenAndServe(":1718", nil)
+	if err != nil {
+		fmt.Println("ListenAndServe:", err)
+	}
 }

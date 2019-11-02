@@ -1,0 +1,7 @@
+# only ignore go.mod if there is no extra dependencies
+go.mod
+go.sum
+
+README.md
+
+cmd/
