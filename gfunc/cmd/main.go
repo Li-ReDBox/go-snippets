@@ -1,7 +1,7 @@
 package main
 
-import "gfunc/gfunc"
+import "gfunc/src"
 
 func main() {
-	gfunc.Demo()
+	src.Demo()
 }

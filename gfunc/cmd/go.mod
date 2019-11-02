@@ -2,6 +2,6 @@ module demo
 
 go 1.11
 
-require gfunc/gfunc v0.0.0
+require gfunc/src v0.0.0
 
-replace gfunc/gfunc => ../
+replace gfunc/src => ../
