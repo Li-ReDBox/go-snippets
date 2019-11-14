@@ -23,7 +23,7 @@ func longRunTask(c chan bool) {
 }
 
 func main() {
-	c := make(chan bool)
+	c := make(chan bool, 10)
 	helloHandler := func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Set c to true to trigger background task runner.")
 		c <- true
