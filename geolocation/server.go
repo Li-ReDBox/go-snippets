@@ -30,14 +30,16 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 
 // response to caller as soon as possible, but guarantee the long run background task finishes
 func balanced(w http.ResponseWriter, r *http.Request) {
+	go func() {
+		fmt.Fprintln(w, "Hi, I am speaking to you, but will redirect once things have been done.")
+		f, _ := w.(http.Flusher)
+		f.Flush()
+	}()
 	c := make(chan bool)
 	go func(c chan bool) {
 		time.Sleep(3 * time.Second)
 		c <- true
 	}(c)
-	go func() {
-		fmt.Fprintln(w, "Hi, I am speaking to you, but will redirect once things have been done.")
-	}()
 	fmt.Fprintln(w, <-c)
 }
 
