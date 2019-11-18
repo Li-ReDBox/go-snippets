@@ -27,15 +27,21 @@ func bkSelect(c chan bool) {
 	}
 }
 
-func independent() {
+func independent(c chan string) {
 	for {
-		time.Sleep(400 * time.Nanosecond)
-		fmt.Println("I am awake to do my stuff... Done... See you in 400 ns.")
+		if w := <-c; len(w) > 0 {
+			fmt.Println("I was asked to spread:", w)
+		} else {
+			fmt.Println("I am awake to do my stuff... Done... See you.")
+		}
 	}
 }
 
 func main() {
-	go independent()
+	msg := make(chan string)
+	go independent(msg)
+	msg <- "World is busy"
+
 	count = 0
 	con := make(chan bool)
 	go background(con)
