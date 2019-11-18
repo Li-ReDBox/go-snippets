@@ -28,18 +28,21 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://google.com.au", 307)
 }
 
-// response to caller as soon as possible, but guarantee the long run background task finishes
+// Below code intend to response to caller as soon as possible, and notify caller once the long run
+// background task finishes using Flush().
+// In reality, Cloud Function will not send response after Flush().
+// Also, browsers behave differently to Flush(). there is no guarantee the content will be rendered
+// when it is received in pieces.
 func balanced(w http.ResponseWriter, r *http.Request) {
-	go func() {
-		fmt.Fprintln(w, "Hi, I am speaking to you, but will redirect once things have been done.")
-		f, _ := w.(http.Flusher)
-		f.Flush()
-	}()
 	c := make(chan bool)
 	go func(c chan bool) {
 		time.Sleep(3 * time.Second)
 		c <- true
 	}(c)
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintln(w, "Hi, I am speaking to you, but will redirect once things have been done.")
+	f, _ := w.(http.Flusher)
+	f.Flush()
 	fmt.Fprintln(w, <-c)
 }
 
