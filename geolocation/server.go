@@ -24,6 +24,10 @@ func longRunTask(c chan bool) {
 	}
 }
 
+func redirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "https://google.com.au", 307)
+}
+
 func main() {
 	c = make(chan bool, 10)
 	helloHandler := func(w http.ResponseWriter, req *http.Request) {
@@ -35,5 +39,6 @@ func main() {
 
 	go longRunTask(c)
 	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("/red", redirect)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
