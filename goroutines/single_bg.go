@@ -27,7 +27,15 @@ func bkSelect(c chan bool) {
 	}
 }
 
+func independent() {
+	for {
+		time.Sleep(400 * time.Nanosecond)
+		fmt.Println("I am awake to do my stuff... Done... See you in 400 ns.")
+	}
+}
+
 func main() {
+	go independent()
 	count = 0
 	con := make(chan bool)
 	go background(con)
