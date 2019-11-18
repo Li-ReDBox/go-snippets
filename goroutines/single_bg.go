@@ -29,10 +29,13 @@ func bkSelect(c chan bool) {
 
 func independent(c chan string) {
 	for {
-		if w := <-c; len(w) > 0 {
+		select {
+		case w := <-c:
 			fmt.Println("I was asked to spread:", w)
-		} else {
-			fmt.Println("I am awake to do my stuff... Done... See you.")
+		default:
+			fmt.Println("I am awake to do my stuff... Done... See you in 500ns.")
+			// keep screen clean for a while
+			time.Sleep(500 * time.Nanosecond)
 		}
 	}
 }
@@ -40,7 +43,6 @@ func independent(c chan string) {
 func main() {
 	msg := make(chan string)
 	go independent(msg)
-	msg <- "World is busy"
 
 	count = 0
 	con := make(chan bool)
@@ -50,6 +52,10 @@ func main() {
 	for i := 0; i < max; i++ {
 		con <- true
 	}
+	msg <- "Fist, world is busy"
+
 	time.Sleep(100 * time.Microsecond)
 	fmt.Println("After given some spare time to finish, the difference between asked and run =", max-count)
+
+	msg <- "Last, world is still busy"
 }
