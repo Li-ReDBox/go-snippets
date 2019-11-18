@@ -28,6 +28,19 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://google.com.au", 307)
 }
 
+// response to caller as soon as possible, but guarantee the long run background task finishes
+func balanced(w http.ResponseWriter, r *http.Request) {
+	c := make(chan bool)
+	go func(c chan bool) {
+		time.Sleep(3 * time.Second)
+		c <- true
+	}(c)
+	go func() {
+		fmt.Fprintln(w, "Hi, I am speaking to you, but will redirect once things have been done.")
+	}()
+	fmt.Fprintln(w, <-c)
+}
+
 func main() {
 	c = make(chan bool, 10)
 	helloHandler := func(w http.ResponseWriter, req *http.Request) {
@@ -40,5 +53,6 @@ func main() {
 	go longRunTask(c)
 	http.HandleFunc("/hello", helloHandler)
 	http.HandleFunc("/red", redirect)
+	http.HandleFunc("/sleep", balanced)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
