@@ -14,11 +14,9 @@ func init() {
 
 // Two forms of normal go routines, no difference in functionality
 func background(c chan bool) {
-	for {
-		if <-c {
-			count += 1
-			fmt.Println(count, ": We were asked to run")
-		}
+	for _ = range c {
+		count += 1
+		fmt.Println(count, ": We were asked to run")
 	}
 }
 
