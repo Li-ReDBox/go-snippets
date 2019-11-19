@@ -1,0 +1,31 @@
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+var cache string
+
+// Use a cache and the same interface for retrieving data
+// either compute it from scratch or from cache
+func readFromSomewhere() chan string {
+	c := make(chan string)
+	go func() {
+		if len(cache) > 0 {
+			fmt.Println("We have already had it, put it to channel now")
+		} else {
+			fmt.Println("Pretend to run a IO heavy stuff somewhere.")
+			time.Sleep(1 * time.Second)
+			cache = "your data is here"
+		}
+		c <- cache
+	}()
+	return c
+}
+
+func main() {
+	fmt.Println(<-readFromSomewhere())
+	fmt.Println(<-readFromSomewhere())
+	fmt.Println(<-readFromSomewhere())
+}
