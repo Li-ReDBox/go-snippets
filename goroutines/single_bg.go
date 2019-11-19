@@ -6,6 +6,11 @@ import (
 )
 
 var count int
+var msg = make(chan string)
+
+func init() {
+	go independent(msg)
+}
 
 func background(c chan bool) {
 	for {
@@ -41,8 +46,6 @@ func independent(c chan string) {
 }
 
 func main() {
-	msg := make(chan string)
-	go independent(msg)
 
 	count = 0
 	con := make(chan bool)
