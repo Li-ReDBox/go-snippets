@@ -25,6 +25,9 @@ func readFromSomewhere() chan string {
 }
 
 func main() {
+	question := readFromSomewhere()
+	// no reader, no wait, so discard this, let main to waste it
+	readFromSomewhere()
 	wait := make(chan bool)
 	for _ = range [5]int{} {
 		go func(w chan bool) {
@@ -33,4 +36,7 @@ func main() {
 		}(wait)
 		_ = <-wait
 	}
+	// consume once
+	fmt.Println("Print previously received content:")
+	fmt.Println(<-question)
 }
