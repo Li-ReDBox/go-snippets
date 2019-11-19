@@ -25,7 +25,12 @@ func readFromSomewhere() chan string {
 }
 
 func main() {
-	fmt.Println(<-readFromSomewhere())
-	fmt.Println(<-readFromSomewhere())
-	fmt.Println(<-readFromSomewhere())
+	wait := make(chan bool)
+	for _ = range [5]int{} {
+		go func(w chan bool) {
+			fmt.Println(<-readFromSomewhere())
+			w <- true
+		}(wait)
+		_ = <-wait
+	}
 }
