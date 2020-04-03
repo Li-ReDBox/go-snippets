@@ -13,6 +13,10 @@ message (I could not reproduce this error message):
 
 `ERROR: (gcloud.functions.deploy) OperationError: code=3, message=Build failed: Cannot parse function source dir:  Multiple packages in user code directory: demo_test != demo`
 
+I found dashboard may have more information. That means the error is picked up in the remote building process. Which
+means sometime `gcloud` did not communicate well with remote, could not get error from it. That's my guess why the
+error message sometime not complete.
+
 This error can appear either the code is in a module and just a normal package.
 
 The fix of this is to exclude this file by `.gcloudignore` or use `--ignore-file` argument. 
