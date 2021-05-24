@@ -7,6 +7,14 @@ import (
 	"net/http"
 )
 
+type Demo struct {
+	data string
+}
+
+func (d *Demo) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "We are serving from %s with %s", req.URL, d.data)
+}
+
 // MiddleWare: stacked closures
 // A middleware to provide logging of requests
 func loggingHandler(h http.Handler) http.Handler {
@@ -53,6 +61,8 @@ func main() {
 	http.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 	})
+
+	http.Handle("/demo", &Demo{data: "Demo Data"})
 
 	httpAddr := ":8000"
 	fmt.Printf("Serving on port %s\n", httpAddr)
