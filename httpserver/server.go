@@ -28,12 +28,69 @@ func loggingHandler(h http.Handler) http.Handler {
 // Another middleware to demonstrate chaining middleware
 func midwareHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Printf("This is in midware - %s\t%s", req.RemoteAddr, req.URL)
+		log.Printf("This is in midware - %s\t%s, method=%s", req.RemoteAddr, req.URL, req.Method)
 		// continue on to server the request
 		h.ServeHTTP(w, req)
 		// once the wrapped Handler done, we can do other things aftwards.
 		// But we should not write to w
 	})
+}
+
+// // http.HandlerFunc type is an adapter to allow the use of
+// // ordinary functions as HTTP handlers. If f is a function
+// // with the appropriate signature, HandlerFunc(f) is a
+// // Handler that calls f.
+// type HandlerFunc func(ResponseWriter, *Request)
+
+// // HandlerFunc.ServeHTTP calls f(w, r).
+// func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+// 	f(w, r)
+// }
+
+// A Rester responds http Get, Post, Put and Delete methods
+type Rester interface {
+	Get(http.ResponseWriter, *http.Request) error
+	Post(http.ResponseWriter, *http.Request) error
+	Put(http.ResponseWriter, *http.Request) error
+	Delete(http.ResponseWriter, *http.Request) error
+}
+
+// Create wraps a Rester into an http.HandlerFunc, in turn
+// responds from a correct defined method responder.
+func Create(rest Rester) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			fmt.Fprintln(w, "GET")
+			rest.Get(w, r)
+		default:
+			fmt.Fprintln(w, "Not supported")
+		}
+	})
+}
+
+type Book struct {
+	name string
+}
+
+func (b Book) Get(w http.ResponseWriter, r *http.Request) error {
+	fmt.Fprintf(w, "Your book is %s", b.name)
+	return nil
+}
+
+func (b Book) Post(w http.ResponseWriter, r *http.Request) error {
+	fmt.Fprintf(w, "Your book  %s is being created", b.name)
+	return nil
+}
+
+func (b Book) Put(w http.ResponseWriter, r *http.Request) error {
+	fmt.Fprintf(w, "Your book %s is being updating", b.name)
+	return nil
+}
+
+func (b Book) Delete(w http.ResponseWriter, r *http.Request) error {
+	fmt.Fprintf(w, "Your book %s is being delete", b.name)
+	return nil
 }
 
 func main() {
@@ -63,6 +120,9 @@ func main() {
 	})
 
 	http.Handle("/demo", &Demo{data: "Demo Data"})
+
+	b := Book{name: "Go is great"}
+	http.Handle("/rest", Create(b))
 
 	httpAddr := ":8000"
 	fmt.Printf("Serving on port %s\n", httpAddr)
