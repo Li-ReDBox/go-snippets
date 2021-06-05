@@ -24,11 +24,10 @@ func furtherProcess(c int) {
 // An artificial but illustrative simulation of a requester, a load generator.
 // work is a send-only channel, once set, Banlancer can start to dispatch
 func requester(work chan<- Request) {
-	var nWorker int64 = 5
 	c := make(chan int)
 	for {
 		// Kill some time (fake load).
-		time.Sleep(time.Duration(rand.Int63n(nWorker*2)) * time.Second)
+		time.Sleep(time.Duration(rand.Intn(1e3)) * time.Microsecond)
 		fmt.Println("Will create a new request, waiting for a worker ...")
 		work <- Request{workFn, c} // send request
 		result := <-c              // wait for answer
@@ -49,21 +48,26 @@ func (p Pool) Less(i, j int) bool {
 func (p *Pool) Pop() interface{} {
 	old := *p
 	n := len(old)
-	x := old[n-1]
+	item := old[n-1]
+	old[n-1] = nil  // avoid memory leak
+	item.index = -1 // for safety
 	*p = old[0 : n-1]
-	fmt.Println("popped out", n-1)
-	return x
+	// fmt.Println("popped out", n-1)
+	return item
 }
 
 func (p *Pool) Push(x interface{}) {
 	// Push and Pop use pointer receivers because they modify the slice's length,
 	// not just its contents.
-	fmt.Println("Pushing in", x.(*Worker).index)
-	*p = append(*p, x.(*Worker))
+	// fmt.Println("Pushing in", x.(*Worker).index)
+	n := len(*p)
+	item := x.(*Worker)
+	item.index = n
+	*p = append(*p, item)
 }
 
 func (p Pool) Swap(i, j int) {
-	fmt.Println("Swapping", i, j)
+	// fmt.Println("Swapping", i, j)
 	p[i], p[j] = p[j], p[i]
 	p[i].index = i
 	p[j].index = j
@@ -118,8 +122,7 @@ func (b *Balancer) dispatch(req Request) {
 	w.pending++
 	// Put it into its place on the heap.
 	heap.Push(&b.pool, w)
-	fmt.Println("Worker has been popped, dispatched")
-	go w.work(b.done)
+	fmt.Println("Worker", w.index, "has been popped, dispatched")
 }
 
 // Job is complete; update heap
@@ -130,7 +133,7 @@ func (b *Balancer) completed(w *Worker) {
 	heap.Remove(&b.pool, w.index)
 	// Put it into its place on the heap.
 	heap.Push(&b.pool, w)
-	fmt.Println("Cleanup done, and push the worker back to the pool for new requests.\n\n")
+	fmt.Println("Cleanup done, and push the worker", w.index, "back to the pool for new requests.\n\n")
 }
 
 // if there is a send only chanel, how not to block
@@ -152,47 +155,32 @@ func main() {
 	// time.Sleep(1 * time.Second)
 	// End of the simple dome
 
-	wp := make(Pool, 2)
+	workers := 5
+	wp := make(Pool, workers)
 
-	wp[0] = &Worker{
-		requests: make(chan Request, 2),
+	for i := 0; i < workers; i++ {
+		wp[i] = &Worker{
+			requests: make(chan Request), // this is an unbuffered channel
+			index:    i,
+		}
 	}
-	wp[1] = &Worker{
-		requests: make(chan Request, 2),
-	}
+
 	heap.Init(&wp)
 
 	b := Balancer{
 		wp,
 		make(chan *Worker),
 	}
-
-	// go func() {
-	// 	wp[0].work(b.done)
-	// 	// wp[1].work(b.done)
-	// }()
-
-	// // no racing, but only run once
-	// go func() {
-	// 	for {
-	// 		r := make(chan Request)
-	// 		// set up channel, it has to be done through goroutine
-	// 		go requester(r)
-	// 		b.balance(r)
-	// 	}
-	// }()
+	for i := 0; i < workers; i++ {
+		go wp[i].work(b.done)
+	}
 
 	r := make(chan Request)
 	// set up channel, it has to be done through goroutine
-	go b.balance(r)
 	go requester(r)
+	go b.balance(r)
 
-	boom := time.After(3 * time.Second)
-	for {
-		select {
-		case <-boom:
-			fmt.Println("Too much, going home. BOOM!")
-			return
-		}
-	}
+	boom := time.After(1 * time.Second)
+	<-boom
+	fmt.Println("Too much, going home. BOOM!")
 }
