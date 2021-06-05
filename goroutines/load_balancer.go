@@ -49,10 +49,10 @@ func (p *Pool) Pop() interface{} {
 	old := *p
 	n := len(old)
 	item := old[n-1]
-	old[n-1] = nil  // avoid memory leak
+	old[n-1] = nil // avoid memory leak
+	// fmt.Println("popped out", n-1, "its index was", item.index)
 	item.index = -1 // for safety
 	*p = old[0 : n-1]
-	// fmt.Println("popped out", n-1)
 	return item
 }
 
