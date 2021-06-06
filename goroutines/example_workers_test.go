@@ -1,11 +1,9 @@
-// heap
-// This example demonstrates a priority queue built using the heap interface.
-package main
+// This example demonstrates a WorkerPool using the heap interface.
+package workerpool_test
 
 import (
 	"container/heap"
 	"fmt"
-	"math/rand"
 )
 
 type Pool []*Worker
@@ -49,31 +47,28 @@ type Worker struct {
 	index   int // index in the heap
 }
 
-func main() {
-	workers := 5
-	wp := make(Pool, workers)
+// This example creates a WorkerPool with some items, adds and manipulates an item,
+// and then removes the items with less pending pops out first.
+func Example_WorkerPool() {
+	pendings := []int{1, 30, 29, 15, 27}
+	wp := make(Pool, len(pendings))
 
-	i := 0
-
-	for i = 0; i < workers; i++ {
+	for i, p := range pendings {
 		wp[i] = &Worker{
-			pending: rand.Intn(300),
+			pending: p,
 			index:   i,
 		}
-		fmt.Println(wp[i].index, ", pending: ", wp[i].pending)
 	}
 
 	heap.Init(&wp)
-	// for i = 0; i < workers; i++ {
-	// 	fmt.Println("Worker's pending", wp[i].pending, wp[i].index)
-	// }
 
-	// heap.Push(&wp, &Worker{pending: 3})
+	heap.Push(&wp, &Worker{pending: 3})
 
-	for i = 0; i < workers; i++ {
+	for wp.Len() > 0 {
 		w := heap.Pop(&wp).(*Worker)
-		fmt.Println("Worker's pending", w.pending)
+		fmt.Printf("%d ", w.pending)
 	}
 
-	// fmt.Println("Final length:", len(wp))
+	// Output:
+	// 1 3 15 27 29 30
 }
