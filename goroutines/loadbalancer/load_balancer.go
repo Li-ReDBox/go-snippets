@@ -150,15 +150,17 @@ func main() {
 	// set up channel, it has to be done through goroutine
 	go b.balance(r)
 
-	// There are many requests
-	go func() {
-		for {
-			go requester(r)
-		}
-	}()
-	// for i := 0; i < 5; i++ {
-	// 	go requester(r)
-	// }
+	// // Below creates requests non-stop, very quick resource runs out
+	// reaching to LLVM limit of 8128 live goroutines:
+	// race: limit on 8128 simultaneously alive goroutines is exceeded, dying
+	// go func() {
+	// 	for {
+	// 		go requester(r)
+	// 	}
+	// }()
+	for i := 0; i < 50000; i++ {
+		go requester(r)
+	}
 
 	boom := time.After(1 * time.Second)
 	<-boom
