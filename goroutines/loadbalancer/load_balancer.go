@@ -28,7 +28,7 @@ func requester(work chan<- Request) {
 	c := make(chan int)
 	for {
 		// Kill some time (fake load).
-		time.Sleep(time.Duration(rand.Intn(1e3)) * time.Microsecond)
+		time.Sleep(time.Duration(rand.Intn(1e4)) * time.Millisecond)
 		fmt.Println("Will create a new request, waiting for a worker ...")
 		work <- Request{workFn, c} // send request
 		result := <-c              // wait for answer
@@ -79,15 +79,19 @@ func (b *Balancer) balance(work chan Request) {
 // Send Request to worker
 func (b *Balancer) dispatch(req Request) {
 	fmt.Println("Getting a worker from the pool.")
+	fmt.Println()
+	b.pool.Check()
+	fmt.Println()
 	// Grab the least loaded worker...``
 	w := heap.Pop(&b.pool).(*Worker)
+	fmt.Println("Current worker has loading of ", w.pending, " has been popped, dispatched")
+	go w.work(b.done)
 	// ...send it the task.
 	w.requests <- req
 	// One more in its work queue.
 	w.pending++
 	// Put it into its place on the heap.
 	heap.Push(&b.pool, w)
-	fmt.Println("Worker", w.index, "has been popped, dispatched")
 }
 
 // Job is complete; update heap
@@ -120,7 +124,7 @@ func main() {
 	// time.Sleep(1 * time.Second)
 	// End of the simple dome
 
-	workers := 5
+	workers := 3
 	wp := make(Pool, workers)
 
 	for i := 0; i < workers; i++ {
@@ -136,14 +140,25 @@ func main() {
 		wp,
 		make(chan *Worker),
 	}
-	for i := 0; i < workers; i++ {
-		go wp[i].work(b.done)
-	}
+	// // set all workers to share the same balancer channel
+	// for i := 0; i < workers; i++ {
+	// 	go wp[i].work(b.done)
+	// }
 
+	// Balancer has only one request channel
 	r := make(chan Request)
 	// set up channel, it has to be done through goroutine
-	go requester(r)
 	go b.balance(r)
+
+	// There are many requests
+	go func() {
+		for {
+			go requester(r)
+		}
+	}()
+	// for i := 0; i < 5; i++ {
+	// 	go requester(r)
+	// }
 
 	boom := time.After(1 * time.Second)
 	<-boom

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type Pool []*Worker
 
 func (p Pool) Len() int { return len(p) }
@@ -34,4 +36,10 @@ func (p Pool) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 	p[i].index = i
 	p[j].index = j
+}
+
+func (p Pool) Check() {
+	for _, v := range p {
+		fmt.Println(v.index, " has loading of", v.pending)
+	}
 }
