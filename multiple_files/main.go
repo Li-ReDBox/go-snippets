@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,6 +14,11 @@ func findAll(pattern string) {
 	fs, err := filepath.Glob(pattern)
 	if err != nil {
 		log.Fatalf("Cannot list with pattern of *.txt. Detail %+v\n", err)
+	}
+
+	if len(fs) == 0 {
+		fmt.Println("No suitable files found for pattern", pattern)
+		return
 	}
 
 	// We use sync.WaitGroup to have multiple goroutine run and only finishes when they all finish.
@@ -54,5 +60,8 @@ func processContent(content string) {
 }
 
 func main() {
-	findAll("*.txt")
+	var p = flag.String("p", "*.txt", "Glob patten of files")
+	flag.Parse()
+
+	findAll(*p)
 }
