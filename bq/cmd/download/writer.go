@@ -16,5 +16,5 @@ type LocalStorage struct {
 }
 
 func (l LocalStorage) Save(content, name string) {
-	save(content, l.Folder+"/"+name+".sql2")
+	save(content, l.Folder+"/"+name+".sql")
 }

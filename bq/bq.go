@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"sync"
 
@@ -16,9 +15,9 @@ type Saver interface {
 	Save(path, name string)
 }
 
-func CreatDataset(ds *bigquery.Dataset, ctx context.Context, client *bigquery.Client) error {
+func CreatDataset(ds *bigquery.Dataset, ctx context.Context, client *bigquery.Client, location string) error {
 	meta := &bigquery.DatasetMetadata{
-		Location: os.Getenv("BQ_LOCATION"), // See https://cloud.google.com/bigquery/docs/locations
+		Location: location, // See https://cloud.google.com/bigquery/docs/locations
 	}
 	if err := ds.Create(ctx, meta); err != nil {
 		return err
@@ -28,7 +27,7 @@ func CreatDataset(ds *bigquery.Dataset, ctx context.Context, client *bigquery.Cl
 }
 
 // GetOrCreateDataset gets information of a dataset. If it does not exist, create it first.
-func GetOrCreateDataset(datasetID string, ctx context.Context, client *bigquery.Client) (*bigquery.Dataset, error) {
+func GetOrCreateDataset(datasetID string, ctx context.Context, client *bigquery.Client, location string) (*bigquery.Dataset, error) {
 	// this dataset not necessarily exist
 	ds := client.Dataset(datasetID)
 	meta, err := ds.Metadata(ctx)
@@ -36,7 +35,7 @@ func GetOrCreateDataset(datasetID string, ctx context.Context, client *bigquery.
 		if !isNotExist(err) {
 			return nil, err
 		}
-		err = CreatDataset(ds, ctx, client)
+		err = CreatDataset(ds, ctx, client, location)
 		if err != nil {
 			return nil, fmt.Errorf("Cannot create dataset %s", err)
 		}
@@ -56,13 +55,7 @@ func GetOrCreateDataset(datasetID string, ctx context.Context, client *bigquery.
 	return ds, nil
 }
 
-func NewDatamart(name string) Datamart {
-	projectID := os.Getenv("TARGET_PROJECTID")
-	if projectID == "" {
-		fmt.Println("GOOGLE_CLOUD_PROJECT environment variable must be set.")
-		os.Exit(1)
-	}
-
+func NewDatamart(projectID, location, name string) Datamart {
 	ctx := context.Background()
 
 	client, err := bigquery.NewClient(ctx, projectID)
@@ -70,12 +63,11 @@ func NewDatamart(name string) Datamart {
 		log.Fatalf("bigquery.NewClient: %v", err)
 	}
 
-	ds, err := GetOrCreateDataset(name, ctx, client)
+	ds, err := GetOrCreateDataset(name, ctx, client, location)
 
 	if err != nil {
 		client.Close()
-		fmt.Println("Cannot get or create dataset", name)
-		os.Exit(1)
+		log.Fatalln("Cannot get or create dataset", name)
 	}
 
 	return Datamart{
@@ -151,21 +143,44 @@ func (d Datamart) GetView(viewID string) (string, error) {
 	return meta.ViewQuery, nil
 }
 
+func (d Datamart) GetTable(id string) (bigquery.Schema, error) {
+	table := d.dataset.Table(id)
+	meta, err := table.Metadata(d.ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("View %s\n", table.FullyQualifiedName())
+	return meta.Schema, nil
+}
+
 // Download retrieve schemas and send them to a Saver
 func (d Datamart) Download(tables []string, saver Saver) {
 	var wg sync.WaitGroup
 
-	for _, t := range tables {
+	for _, table := range tables {
 		wg.Add(1)
-		go func(view string) {
+		go func(id string) {
 			defer wg.Done()
 
-			def, err := d.GetView(view)
+			bt := d.dataset.Table(id)
+			meta, err := bt.Metadata(d.ctx)
 			if err != nil {
-				fmt.Printf("Cannot view %s of dataset %s, err: %s", d.datasetID, view, err)
+				fmt.Printf("Cannot get meta of %s of dataset %s, err: %s", d.datasetID, id, err)
+				return
 			}
-			saver.Save(def, view)
-		}(t)
+
+			var def string
+			if meta.Type == bigquery.RegularTable {
+				def = fmt.Sprintf("%v", meta.Schema)
+				saver.Save(def, id)
+			} else if meta.Type == bigquery.ViewTable {
+				def = meta.ViewQuery
+				saver.Save(def, id)
+			} else {
+				fmt.Println(bt, "is not supported for downloading", meta.Type)
+			}
+
+		}(table)
 	}
 	wg.Wait()
 }
