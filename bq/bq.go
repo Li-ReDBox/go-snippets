@@ -12,7 +12,8 @@ import (
 )
 
 type Saver interface {
-	Save(path, name string)
+	SaveView(content, name string)
+	SaveSchema(content []byte, name string)
 }
 
 func CreatDataset(ds *bigquery.Dataset, ctx context.Context, client *bigquery.Client, location string) error {
@@ -153,6 +154,17 @@ func (d Datamart) GetTable(id string) (bigquery.Schema, error) {
 	return meta.Schema, nil
 }
 
+func printSchema(schema bigquery.Schema) {
+	for _, s := range schema {
+		fmt.Printf("%v\n", s)
+		fmt.Printf("%s: %s, %s, %t %t\n\n", s.Name, s.Description, s.Type, s.Required, s.Repeated)
+		if s.Type == bigquery.RecordFieldType {
+			printSchema(s.Schema)
+		}
+	}
+
+}
+
 // Download retrieve schemas and send them to a Saver
 func (d Datamart) Download(tables []string, saver Saver) {
 	var wg sync.WaitGroup
@@ -171,11 +183,16 @@ func (d Datamart) Download(tables []string, saver Saver) {
 
 			var def string
 			if meta.Type == bigquery.RegularTable {
-				def = fmt.Sprintf("%v", meta.Schema)
-				saver.Save(def, id)
+				printSchema(meta.Schema)
+				js, err := getSchemaJSON(meta.Schema)
+				if err != nil {
+					fmt.Printf("Cannot get JSON of the schema of %s of dataset %s, err: %s", d.datasetID, id, err)
+					return
+				}
+				saver.SaveSchema(js, id)
 			} else if meta.Type == bigquery.ViewTable {
 				def = meta.ViewQuery
-				saver.Save(def, id)
+				saver.SaveView(def, id)
 			} else {
 				fmt.Println(bt, "is not supported for downloading", meta.Type)
 			}
