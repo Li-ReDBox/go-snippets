@@ -32,27 +32,26 @@ func GetOrCreateDataset(datasetID string, ctx context.Context, client *bigquery.
 	// this dataset not necessarily exist
 	ds := client.Dataset(datasetID)
 	meta, err := ds.Metadata(ctx)
-	if err != nil {
+
+	if err == nil {
+		fmt.Printf("Dataset ID: %s\n", datasetID)
+		fmt.Printf("Description: %s\n", meta.Description)
+		fmt.Println("Labels:")
+		for k, v := range meta.Labels {
+			fmt.Printf("\t%s: %s", k, v)
+		}
+	} else {
 		if !isNotExist(err) {
 			return nil, err
 		}
 		err = CreatDataset(ds, ctx, client, location)
 		if err != nil {
-			return nil, fmt.Errorf("Cannot create dataset %s", err)
+			return nil, fmt.Errorf("dataset %s does not exist, and failed to create it: %s", datasetID, err)
 		}
+		// CreatDataset does not set Description or Lables, so no details need to printed
+		fmt.Printf("Created a new Dataset of ID: %s\n", datasetID)
 	}
 
-	meta, err = ds.Metadata(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot get meta of dataset %s, %s", datasetID, err)
-	}
-
-	fmt.Printf("Dataset ID: %s\n", datasetID)
-	fmt.Printf("Description: %s\n", meta.Description)
-	fmt.Println("Labels:")
-	for k, v := range meta.Labels {
-		fmt.Printf("\t%s: %s", k, v)
-	}
 	return ds, nil
 }
 
