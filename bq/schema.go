@@ -69,14 +69,13 @@ func convertField(fs bigquery.FieldSchema) (*Field, error) {
 
 func getSchemaJSON(s bigquery.Schema) ([]byte, error) {
 	fs, err := convertSchema(s)
-	// TODO: error should say it is in exportSchemaJSON
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("when getting schema in JSON, we had: %s", err)
 	}
 
 	out, err := json.MarshalIndent(fs, "", "  ")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("when getting schema in JSON, failed to marsh it: %s", err)
 	}
 	return out, nil
 }
