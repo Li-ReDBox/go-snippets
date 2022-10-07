@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+/*Daisy chain: a series of chained actions which has been set up (chained) and
+  will be triggered only when the end has been set.
+  In the examples, set up function sees both ends, but I have seen simlar setup
+  just using one channel - the set up function will call itself recursively.
+  The difference lies daisy chain (using two channels) defines exchange of
+  information action, single channel is to define commonly shared channel.
+*/
+
 // f gets an int value from a channel (right), plus 1 and passes on to
 // another channel (left). It sets up one piece of a chain.
 // from Rob Pike's talk
@@ -60,9 +68,15 @@ func straight() {
 
 func main() {
 	start := time.Now()
-	demo()
+	original()
 	elapsed := time.Since(start)
-	fmt.Printf("Time took using channels was %v\n", elapsed.Microseconds())
+	fmt.Printf("Time took using channels in original form was %v\n", elapsed.Microseconds())
+
+	start = time.Now()
+	demo()
+	elapsed = time.Since(start)
+	fmt.Printf("Time took using channels in simplified was %v\n", elapsed.Microseconds())
+
 	start = time.Now()
 	straight()
 	elapsed = time.Since(start)
