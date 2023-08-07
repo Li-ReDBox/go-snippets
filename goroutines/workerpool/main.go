@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
 
 	// "sync"
 	"time"
@@ -131,9 +132,11 @@ func demoPool2() {
 	// The channel are buffered by the number of jobs to run. This is not
 	// great, isn't?
 
+	// Here we use non-buffered channels
 	jobs := make(chan Job)
 	results := make(chan string)
 
+	// We create a pool of poolSize worker
 	var i int
 	for i = 0; i < poolSize; i++ {
 		workerId := i
@@ -147,11 +150,13 @@ func demoPool2() {
 		Load: rand.Intn(1e3),
 	}
 
+	// There are poolSize of workers, so at the start, we can send poolSize jobs without deadlock
+	// After that we have to monitoring the channels to make sure they are moving forward
 	resultCount := 0
 	for i = 0; i < jobCount; {
 		select {
 		case jobs <- job:
-			i = i + 1
+			i++
 			job = Job{
 				ID:   i,
 				Load: rand.Intn(1e3),
@@ -165,13 +170,23 @@ func demoPool2() {
 		}
 	}
 
+	// Once all jobs are sent to workers, there will be poolSize number of results have not retrieved:
+	fmt.Println("so far", resultCount, "has done, the rest will be retrieved below:")
 	for i = resultCount; i < jobCount; i++ {
 		fmt.Println(<-results)
 	}
+	fmt.Printf("\nNumber of gorountine before closing jobs channel: %d\n", runtime.NumGoroutine()-1)
+
+	// close jobs channel, so worker routines can exit.
+	// In this example, it is not critical but will be critical when this goroutine is created by others
+	// and run for a while
 	close(jobs)
 
-	// wait for them to finish
+	// give runtime a bit of time to let it to do it jobs
+	time.Sleep(100 * time.Millisecond)
+
 	fmt.Println("Completed runs with a worker pool of size", poolSize)
+	fmt.Println("Number of gorountine now:", runtime.NumGoroutine()-1)
 }
 
 type Pool struct {
