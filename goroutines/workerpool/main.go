@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-	demoPool2()
+	//demoPool2()
+	demoJobProcessing()
 }
 
 func work(id, load int) {
@@ -187,6 +188,57 @@ func demoPool2() {
 
 	fmt.Println("Completed runs with a worker pool of size", poolSize)
 	fmt.Println("Number of gorountine now:", runtime.NumGoroutine()-1)
+}
+
+type Pool struct {
+	Size    int
+	Jobs    chan Job
+	Results chan string
+	counter int
+}
+
+func (p *Pool) Init() {
+	p.Jobs = make(chan Job, p.Size+1)
+	p.Results = make(chan string)
+	p.counter = 0
+
+	for i := 0; i < p.Size; i++ {
+		workID := i
+		go worker(workID, p.Jobs, p.Results)
+	}
+}
+
+func (p *Pool) Process(j Job) {
+	p.counter += 1
+	p.Jobs <- j
+}
+
+// func (p *Pool) Conclude() {
+// 	for r := range  {
+// 		fmt.Println(<-p.Results)
+// 	}
+// }
+
+// demoJobProcessing demos a simple worker pool processes jobs.
+func demoJobProcessing() {
+	// create a size of 2 pool
+	p := &Pool{Size: 2}
+	p.Init()
+
+	// we have five jobs to send out
+	for i := 0; i < 5; i++ {
+		job := Job{
+			ID:   i,
+			Load: rand.Intn(1e3),
+		}
+
+		p.Process(job)
+	}
+	//go p.Conclude()
+	close(p.Jobs)
+	for i := 0; i < 5; i++ {
+		fmt.Println(<-p.Results)
+	}
 }
 
 type Pool struct {
