@@ -1,0 +1,146 @@
+li:loadbalancer$ go run pool.go load_balancer.go
+The worker ready for requests
+The worker ready for requests
+The worker ready for requests
+Will create a new request, waiting for a worker ...
+1 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 0
+2  has loading of 0
+
+Current worker has loading of  0  has been popped, dispatched
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Balancer has been notified from a worker.
+The worker ready for requests
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+1 Balancer received the signal of Done. Cleaning up ...
+Cleanup done, and push the worker 2 back to the pool for new requests.
+
+
+Will create a new request, waiting for a worker ...
+2 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 0
+2  has loading of 0
+
+Current worker has loading of  0  has been popped, dispatched
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Balancer has been notified from a worker.
+The worker ready for requests
+2 Balancer received the signal of Done. Cleaning up ...
+Cleanup done, and push the worker 2 back to the pool for new requests.
+
+
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+Will create a new request, waiting for a worker ...
+3 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 0
+2  has loading of 0
+
+Current worker has loading of  0  has been popped, dispatched
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Balancer has been notified from a worker.
+The worker ready for requests
+3 Balancer received the signal of Done. Cleaning up ...
+Cleanup done, and push the worker 2 back to the pool for new requests.
+
+
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+Will create a new request, waiting for a worker ...
+4 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 0
+2  has loading of 0
+
+Current worker has loading of  0  has been popped, dispatched
+Will create a new request, waiting for a worker ...
+4 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 0
+2  has loading of 1
+
+Current worker has loading of  0  has been popped, dispatched
+Will create a new request, waiting for a worker ...
+4 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 1
+2  has loading of 1
+
+Current worker has loading of  0  has been popped, dispatched
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Balancer has been notified from a worker.
+The worker ready for requests
+4 Balancer received the signal of Done. Cleaning up ...
+Cleanup done, and push the worker 0 back to the pool for new requests.
+
+
+Will create a new request, waiting for a worker ...
+Will create a new request, waiting for a worker ...
+5 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 0
+1  has loading of 1
+2  has loading of 1
+
+Current worker has loading of  0  has been popped, dispatched
+5 Balancer received request. Start to dispatch ...
+Getting a worker from the pool.
+
+0  has loading of 1
+1  has loading of 1
+2  has loading of 1
+
+Current worker has loading of  1  has been popped, dispatched
+Will create a new request, waiting for a worker ...
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+Request is being received from the channel for the worker. Request.fn starts.
+I did something for the balancer.
+Worker has sent result to Request's channel. Next, tell balancer it is done.
+Request has been processed, will send to furtherProcess()
+This is the processor of  1
+furtherProcess has finished too. Full life cycle of a request is done.
+Will create a new request, waiting for a worker ...
+Will create a new request, waiting for a worker ...
+# there is no further change until time out
